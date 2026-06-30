@@ -30,7 +30,7 @@ public class PostController {
                 .body(ApiResponse.of("post_create_success", response));
     }
 
-    @GetMapping("/posts")
+    @GetMapping
     public ResponseEntity<ApiResponse<List<PostResponseDto>>> getPosts(
             @RequestHeader(value = "X-USER-ID", required = false) Long userId
     ) {

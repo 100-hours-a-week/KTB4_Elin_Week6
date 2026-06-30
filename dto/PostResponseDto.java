@@ -32,11 +32,17 @@ public class PostResponseDto {
     }
 
     public static PostResponseDto from(Post post, User user, int likeCount, int commentCount) {
+        boolean deletedUser = user.getDeletedAt() != null;
+
+        Long userId = deletedUser ? null : user.getId();
+        String nickname = deletedUser ? "탈퇴한 사용자" : user.getNickname();
+        String profileImage = deletedUser ? null : user.getProfileImage();
+
         return new PostResponseDto(
                 post.getId(),
-                user.getId(),
-                user.getNickname(),
-                user.getProfileImage(),
+                userId,
+                nickname,
+                profileImage,
                 post.getTitle(),
                 post.getContent(),
                 post.getContentImage(),
