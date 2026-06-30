@@ -56,7 +56,7 @@ public class CommentService {
         postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("post_not_found"));
 
-        return commentRepository.findAllByPost_Id(postId)
+        return commentRepository.findAllByPost_IdAndDeletedAtIsNull(postId)
                 .stream()
                 .map(CommentResponseDto::from)
                 .toList();
@@ -69,11 +69,11 @@ public class CommentService {
             CommentRequestDto request
     ) {
         if (userId == null) {
-            throw new NotFoundException("unauthorized_error");
+            throw new UnauthorizedException("unauthorized_error");
         }
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(()-> new NotFoundException("post_not_found"));
+        postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("post_not_found"));
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("comment_not_found"));

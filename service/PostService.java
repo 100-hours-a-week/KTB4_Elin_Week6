@@ -1,5 +1,5 @@
 package community.api.service;
-
+import community.api.repository.PostCountProjection;
 import community.api.dto.PostRequestDto;
 import community.api.dto.PostResponseDto;
 import community.api.entity.Post;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +29,15 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
 
+    @Transactional
     public PostResponseDto createPost(Long userId, PostRequestDto request) {
         if (userId == null) {
             throw new UnauthorizedException("unauthorized_error");
         }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("user_not_found"));
+
         Post post = new Post(
                 user,
                 request.getTitle(),
@@ -49,9 +54,48 @@ public class PostService {
         if (userId == null) {
             throw new UnauthorizedException("unauthorized_error");
         }
-        return postRepository.findAll()
+
+        List<Post> posts = postRepository.findAllBy();
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .toList();
+
+        Map<Long, Long> likeCountMap = likeRepository.countByPostIds(postIds)
                 .stream()
-                .map(this::toResponseDto)
+                .collect(Collectors.toMap(
+                        PostCountProjection::getPostId,
+                        PostCountProjection::getCountValue
+                ));
+
+        Map<Long, Long> commentCountMap = commentRepository.countByPostIds(postIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        PostCountProjection::getPostId,
+                        PostCountProjection::getCountValue
+                ));
+
+        return posts.stream()
+                .map(post -> {
+                    int likeCount = likeCountMap
+                            .getOrDefault(post.getId(), 0L)
+                            .intValue();
+
+                    int commentCount = commentCountMap
+                            .getOrDefault(post.getId(), 0L)
+                            .intValue();
+
+                    return PostResponseDto.from(
+                            post,
+                            post.getUser(),
+                            likeCount,
+                            commentCount
+                    );
+                })
                 .toList();
     }
     @Transactional
@@ -84,7 +128,7 @@ public class PostService {
         return toResponseDto(post);
     }
     @Transactional
-    public void deletePost(Long postId, Long userId) {
+    public void deletePost(Long userId, Long postId) {
         if (userId == null) {
             throw new UnauthorizedException("unauthorized_error");
         }

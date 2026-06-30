@@ -39,7 +39,7 @@ public class UserService {
     }
 
     public UserResponseDto.Login login(UserRequestDto.Login request) {
-        User user = userRepository.findByEmail(request.getEmail());
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail());
 
         if (user == null) {
             throw new UnauthorizedException("login_failed");

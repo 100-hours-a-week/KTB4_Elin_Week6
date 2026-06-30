@@ -31,12 +31,6 @@ public class Post {
     @Column(name = "content_image", length = 500)
     private String contentImage;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
@@ -49,18 +43,6 @@ public class Post {
         this.content = content;
         this.contentImage = contentImage;
         this.viewCount = 0;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void update(String title, String content, String contentImage) {
